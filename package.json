@@ -1,0 +1,28 @@
+{
+  "name": "discord-token-manager",
+  "version": "1.0.0",
+  "description": "Discord token manager software that allows you to use Tor or not !",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder"
+  },
+  "dependencies": {
+    "fs-extra": "^11.2.0",
+    "net": "^1.0.2",
+    "user-agents": "^1.1.374"
+  },
+  "devDependencies": {
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "kurama.info.discord-token-manager",
+    "productName": "Discord_token_manager",
+    "win": {
+      "icon": "assets/img/app-icon.ico",
+      "target": "nsis"
+    }
+  },
+  "author": "Kurama.info"
+}

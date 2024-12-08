@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="assets/css/script.css" rel="stylesheet" />
+  <title>Discord Token Manager</title>
+</head>
+
+<body>
+  <div class="app-wrapper">
+    <div class="title-bar">
+      <div class="title-bar-left">
+        <img src="assets/img/app-icon.ico" alt="App Icon" class="app-icon" />
+        <div class="app-info">
+          <h1>Discord Token Manager</h1>
+          <p class="app-version">v1.0 Alpha - github.com/Kurama250</p>
+        </div>
+      </div>
+      <div class="title-bar-right">
+        <button id="minimize-btn" class="title-bar-btn">🗕</button>
+        <button id="close-btn" class="title-bar-btn">×</button>
+      </div>
+    </div>
+
+    <div class="app-container">
+      <form id="add-form">
+        <input type="text" id="name" placeholder="Name" required>
+        <input type="text" id="token" placeholder="Token" required>
+        <button type="submit">Add</button>
+      </form>
+      <div id="tokens-table-container">
+        <table id="tokens-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Name</th>
+              <th>Token</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="popup-overlay" id="popup-overlay"></div>
+  <div class="popup" id="edit-modal">
+    <span class="close" id="close-modal">&times;</span>
+    <h2>Edit Token</h2>
+    <form id="edit-form">
+      <div class="form-inline">
+        <input type="text" id="edit-name" placeholder="Name" required>
+        <input type="text" id="edit-token" placeholder="Token" required>
+        <button type="submit">Save</button>
+      </div>
+    </form>
+  </div>
+
+  <script src="assets/js/script.js"></script>
+</body>
+
+</html>
