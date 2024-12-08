@@ -1,5 +1,5 @@
 <h1 align="center">Discord_token_manager</h1>
-<em><h5 align="center">(Programming Language - Node.js | Batch)</h5></em>
+<em><h5 align="center">(Programming Language - Node.js | Batch | Html | Css)</h5></em>
 
 <p align="center">
   <img src="https://img.shields.io/github/stars/Kurama250/Discord_token_manager">
