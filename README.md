@@ -26,6 +26,8 @@
   <img src="https://github.com/Kurama250/Discord_token_manager/blob/main/app.png" alt="Demo Image">
 </p>
 
+### /\ Warning: Information if you look at your connection region in device on discord you may not see the correct information because discord does not update directly !
+
 # Tutorial to install Discord_token_manager ! For Windows
 
 <h5>A) Auto installer</h5>
