@@ -179,3 +179,23 @@ document.getElementById('close-modal').addEventListener('click', closeModal);
 document.getElementById('popup-overlay').addEventListener('click', closeModal);
 
 loadTokens();
+
+document.addEventListener("DOMContentLoaded", () => {
+    const themeToggleBtn = document.getElementById("theme-toggle-btn");
+    const themeStylesheet = document.getElementById("theme-stylesheet");
+
+    const savedTheme = localStorage.getItem("theme") || "clair";
+    themeStylesheet.href = `assets/css/styles-${savedTheme}.css`;
+    updateButtonText(savedTheme);
+  
+    themeToggleBtn.addEventListener("click", () => {
+      const currentTheme = themeStylesheet.href.includes("styles-clair") ? "sombre" : "clair";
+      themeStylesheet.href = `assets/css/styles-${currentTheme}.css`;
+      localStorage.setItem("theme", currentTheme);
+      updateButtonText(currentTheme);
+    });
+  
+    function updateButtonText(theme) {
+      themeToggleBtn.textContent = theme === "clair" ? "🌞" : "🌙";
+    }
+});
