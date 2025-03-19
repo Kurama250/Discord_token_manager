@@ -9,8 +9,7 @@
   },
   "dependencies": {
     "fs-extra": "^11.2.0",
-    "net": "^1.0.2",
-    "user-agents": "^1.1.374"
+    "net": "^1.0.2"
   },
   "devDependencies": {
     "electron": "^33.2.1",
