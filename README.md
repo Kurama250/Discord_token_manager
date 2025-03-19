@@ -12,7 +12,6 @@
   <img src="https://img.shields.io/npm/v/module-name">
   <img src="https://img.shields.io/npm/v/fs-extra?label=fs-extra">
   <img src="https://img.shields.io/npm/v/net?label=net">
-  <img src="https://img.shields.io/npm/v/user-agents?label=user-agents">
   <img src="https://img.shields.io/npm/v/electron?label=electron">
   <img src="https://img.shields.io/npm/v/electron-builder?label=electron-builder">
 </p>
@@ -21,7 +20,7 @@
 - [Tor link](https://archive.torproject.org/tor-package-archive/torbrowser/13.5.6/tor-expert-bundle-windows-x86_64-13.5.6.tar.gz) for download tor and after start : Tor/tor/tor.exe
 
 <em><h1 align="center">The code is available in application directly if you wish in releases !</h1></em>
-> https://github.com/Kurama250/Discord_token_manager/releases/tag/v1.1
+> https://github.com/Kurama250/Discord_token_manager/releases/tag/v1.2
 
 - Demo : 
 
