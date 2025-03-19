@@ -6,7 +6,6 @@ const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const fs = require('fs-extra');
 const path = require('path');
 const net = require('net');
-const UserAgent = require('user-agents');
 
 let mainWindow;
 let isTorRunning = false;
@@ -32,11 +31,6 @@ const checkIfTorIsRunning = () => {
         });
         socket.connect(9050, '127.0.0.1');
     });
-};
-
-const spoofUserAgent = () => {
-    const userAgent = new UserAgent();
-    return userAgent.toString();
 };
 
 app.on('ready', async () => {
@@ -132,7 +126,7 @@ ipcMain.handle('delete-token', async (event, index) => {
         }
         return tokens;
     } catch (error) {
-        console.error("Error deleting token:", error.message);
+        console.error("Error deleting token :", error.message);
         return [];
     }
 });
@@ -152,9 +146,8 @@ ipcMain.handle('toggle-tor', async (event, { index, enable }) => {
     }
 });
 
-ipcMain.handle('auto-login', async (event, token) => {
-    const userAgent = spoofUserAgent();
 
+ipcMain.handle('auto-login', async (event, token) => {
     let browserWindow = new BrowserWindow({
         width: 800,
         height: 600,
@@ -163,9 +156,12 @@ ipcMain.handle('auto-login', async (event, token) => {
             contextIsolation: false,
             allowRunningInsecureContent: true,
             allowPasting: true,
-            userAgent: userAgent,
         },
     });
+
+    browserWindow.webContents.setUserAgent(
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    );
 
     const session = browserWindow.webContents.session;
     await session.clearCache();
@@ -186,11 +182,18 @@ ipcMain.handle('auto-login', async (event, token) => {
                             location.reload();
                         }, 2500);
                     }
-
                     login("${token}");
                 } catch (error) {}
             })();
         `);
+    });
+
+    browserWindow.webContents.once('did-navigate', (event, url) => {
+        if (url === 'https://discord.com/login') {
+            setTimeout(() => {
+                browserWindow.loadURL('https://discord.com/app');
+            }, 3000);
+        }
     });
 });
 
@@ -206,7 +209,6 @@ ipcMain.handle('auto-login-proxied', async (event, token) => {
         return;
     }
 
-    const userAgent = spoofUserAgent();
     const torSession = require('electron').session.fromPartition('persist:torSession');
     await torSession.setProxy({ proxyRules: 'socks5://127.0.0.1:9050', proxyBypassRules: 'localhost' });
 
@@ -215,9 +217,12 @@ ipcMain.handle('auto-login-proxied', async (event, token) => {
         height: 600,
         webPreferences: {
             session: torSession,
-            userAgent: userAgent,
         },
     });
+
+    browserWindow.webContents.setUserAgent(
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    );
 
     const session = browserWindow.webContents.session;
     await session.clearCache();
@@ -241,4 +246,37 @@ ipcMain.handle('auto-login-proxied', async (event, token) => {
             })();
         `);
     });
+
+    browserWindow.webContents.once('did-navigate', (event, url) => {
+        if (url === 'https://discord.com/login') {
+            setTimeout(() => {
+                browserWindow.loadURL('https://discord.com/app');
+            }, 3000);
+        }
+    });
+});
+
+ipcMain.handle('get-theme', async () => {
+    try {
+        if (!await fs.pathExists(saveFile)) {
+            return { theme: 'light' };
+        }
+        return await fs.readJson(saveFile);
+    } catch (error) {
+        console.error("Error reading theme:", error.message);
+        return { theme: 'light' };
+    }
+});
+
+ipcMain.handle('save-theme', async (event, theme) => {
+    try {
+        if (!(await fs.pathExists(settingsPath))) {
+            await fs.ensureDir(settingsPath);
+        }
+        await fs.writeJson(saveFile, { theme });
+        return { success: true };
+    } catch (error) {
+        console.error("Error saving theme:", error.message);
+        return { success: false, error: error.message };
+    }
 });

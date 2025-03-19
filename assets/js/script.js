@@ -184,7 +184,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const themeToggleBtn = document.getElementById("theme-toggle-btn");
     const themeStylesheet = document.getElementById("theme-stylesheet");
 
-    const savedTheme = localStorage.getItem("theme") || "clair";
+    const savedTheme = localStorage.getItem("theme") || "sombre";
     themeStylesheet.href = `assets/css/styles-${savedTheme}.css`;
     updateButtonText(savedTheme);
   
@@ -196,6 +196,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   
     function updateButtonText(theme) {
-      themeToggleBtn.textContent = theme === "clair" ? "🌞" : "🌙";
+      themeToggleBtn.textContent = theme === "sombre" ? "🌞" : "🌙";
     }
 });
