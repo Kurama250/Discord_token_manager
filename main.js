@@ -1,18 +1,56 @@
-/**
-Licence : Creative commons - CC BY-NC-ND 4.0 by github.com/Kurama250
-*/
-
 const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const fs = require('fs-extra');
 const path = require('path');
 const net = require('net');
+const https = require('https');
+const tar = require('tar');
+const { spawn, exec } = require('child_process');
 
 let mainWindow;
 let isTorRunning = false;
+let loadingWindow = null;
+
+const TOR_DOWNLOAD_URL = 'https://archive.torproject.org/tor-package-archive/torbrowser/13.5.6/tor-expert-bundle-windows-x86_64-13.5.6.tar.gz';
+const DOWNLOAD_PATH = path.join(app.getPath('userData'), 'tor.tar.gz');
+const EXTRACT_DIR = path.join(app.getPath('userData'), 'tor');
+const TOR_EXECUTABLE = path.join(EXTRACT_DIR, 'tor', 'tor.exe');
 
 const userDataPath = app.getPath('userData');
 const tokensPath = path.join(userDataPath, 'tokens');
 const tokensFile = path.join(tokensPath, 'tokens.json');
+const settingsPath = path.join(userDataPath, 'settings');
+const saveFile = path.join(settingsPath, 'theme.json');
+
+const createLoadingWindow = () => {
+    loadingWindow = new BrowserWindow({
+        width: 400,
+        height: 200,
+        frame: false,
+        transparent: true,
+        resizable: false,
+        alwaysOnTop: true,
+        webPreferences: {
+            nodeIntegration: true,
+            contextIsolation: false,
+        }
+    });
+
+    loadingWindow.loadFile('loading.html');
+    return loadingWindow;
+};
+
+const closeLoadingWindow = () => {
+    if (loadingWindow) {
+        loadingWindow.close();
+        loadingWindow = null;
+    }
+};
+
+const updateLoadingProgress = (message, progress = null) => {
+    if (loadingWindow) {
+        loadingWindow.webContents.send('update-progress', { message, progress });
+    }
+};
 
 const checkIfTorIsRunning = () => {
     return new Promise((resolve, reject) => {
@@ -33,12 +71,137 @@ const checkIfTorIsRunning = () => {
     });
 };
 
+const downloadTor = () => {
+    return new Promise((resolve, reject) => {
+        console.log('Downloading Tor...');
+        updateLoadingProgress('Téléchargement de Tor...', 0);
+        
+        const file = fs.createWriteStream(DOWNLOAD_PATH);
+        
+        https.get(TOR_DOWNLOAD_URL, (response) => {
+            if (response.statusCode !== 200) {
+                reject(new Error(`Failed to download Tor: ${response.statusCode}`));
+                return;
+            }
+            
+            const totalSize = parseInt(response.headers['content-length'], 10);
+            let downloadedSize = 0;
+            
+            response.on('data', (chunk) => {
+                downloadedSize += chunk.length;
+                if (totalSize) {
+                    const progress = Math.round((downloadedSize / totalSize) * 100);
+                    updateLoadingProgress(`Téléchargement de Tor... ${progress}%`, progress);
+                }
+            });
+            
+            response.pipe(file);
+            
+            file.on('finish', () => {
+                file.close();
+                console.log('Tor download completed');
+                updateLoadingProgress('Téléchargement terminé', 100);
+                resolve();
+            });
+            
+            file.on('error', (err) => {
+                fs.unlink(DOWNLOAD_PATH, () => {});
+                reject(err);
+            });
+        }).on('error', (err) => {
+            reject(err);
+        });
+    });
+};
+
+const extractTor = () => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            console.log('Extracting Tor...');
+            updateLoadingProgress('Extraction de Tor...', 0);
+            
+            await fs.ensureDir(EXTRACT_DIR);
+            await tar.extract({
+                file: DOWNLOAD_PATH,
+                cwd: EXTRACT_DIR
+            });
+            
+            updateLoadingProgress('Extraction terminée', 50);
+            
+            await fs.remove(DOWNLOAD_PATH);
+            console.log('Tor extraction completed');
+            updateLoadingProgress('Installation terminée', 100);
+            resolve();
+        } catch (error) {
+            reject(error);
+        }
+    });
+};
+
+const ensureTorInstalled = async () => {
+    try {
+        if (await fs.pathExists(TOR_EXECUTABLE)) {
+            console.log('Tor is already installed');
+            return true;
+        }
+        
+        createLoadingWindow();
+        updateLoadingProgress('Checking Tor installation...', 0);
+        
+        await downloadTor();
+        await extractTor();
+        
+        if (await fs.pathExists(TOR_EXECUTABLE)) {
+            console.log('Tor installation completed successfully');
+            updateLoadingProgress('Installation successful!', 100);
+            
+            setTimeout(() => {
+                closeLoadingWindow();
+            }, 1500);
+            
+            return true;
+        } else {
+            throw new Error('Tor executable not found after installation');
+        }
+    } catch (error) {
+        console.error('Error installing Tor:', error);
+        updateLoadingProgress('Installation error', 0);
+        
+        setTimeout(() => {
+            closeLoadingWindow();
+        }, 2000);
+        
+        return false;
+    }
+};
+
 app.on('ready', async () => {
     try {
-        await checkIfTorIsRunning();
-        isTorRunning = true;
+        await ensureTorInstalled();
+        
+        if (!(await fs.pathExists(TOR_EXECUTABLE))) {
+            console.log('Tor installation failed');
+            isTorRunning = false;
+        } else {
+            const torProcess = spawn(TOR_EXECUTABLE, ['--SocksPort', '9050'], {
+                detached: true,
+                stdio: 'ignore'
+            });
+
+            await new Promise(resolve => setTimeout(resolve, 5000));
+
+            try {
+                await checkIfTorIsRunning();
+                isTorRunning = true;
+                console.log('Tor started successfully on app launch');
+            } catch (error) {
+                isTorRunning = false;
+                console.log('Failed to start Tor on app launch:', error);
+            }
+        }
     } catch (err) {
         isTorRunning = false;
+        console.log('Error during Tor startup:', err);
     }
 
     mainWindow = new BrowserWindow({
@@ -146,6 +309,73 @@ ipcMain.handle('toggle-tor', async (event, { index, enable }) => {
     }
 });
 
+ipcMain.handle('start-tor', async () => {
+    try {
+        if (isTorRunning) {
+            return { success: true, message: 'Tor is already running' };
+        }
+
+        if (!(await fs.pathExists(TOR_EXECUTABLE))) {
+            createLoadingWindow();
+            updateLoadingProgress('Tor installation required...', 0);
+            
+            const installed = await ensureTorInstalled();
+            if (!installed) {
+                closeLoadingWindow();
+                return { success: false, error: 'Failed to install Tor' };
+            }
+        }
+
+        const torProcess = spawn(TOR_EXECUTABLE, ['--SocksPort', '9050'], {
+            detached: true,
+            stdio: 'ignore'
+        });
+
+        await new Promise(resolve => setTimeout(resolve, 3000));
+
+        try {
+            await checkIfTorIsRunning();
+            isTorRunning = true;
+            return { success: true, message: 'Tor started successfully' };
+        } catch (error) {
+            return { success: false, error: 'Failed to start Tor: ' + error };
+        }
+    } catch (error) {
+        console.error('Error starting Tor:', error);
+        return { success: false, error: error.message };
+    }
+});
+
+ipcMain.handle('stop-tor', async () => {
+    try {
+        if (!isTorRunning) {
+            return { success: true, message: 'Tor is not running' };
+        }
+
+        exec('taskkill /f /im tor.exe', (error) => {
+            if (error) {
+                console.error('Error stopping Tor:', error);
+            }
+        });
+
+        isTorRunning = false;
+        return { success: true, message: 'Tor stopped successfully' };
+    } catch (error) {
+        console.error('Error stopping Tor:', error);
+        return { success: false, error: error.message };
+    }
+});
+
+ipcMain.handle('get-tor-status', async () => {
+    try {
+        const installed = await fs.pathExists(TOR_EXECUTABLE);
+        const running = await checkIfTorIsRunning().then(() => true).catch(() => false);
+        return { installed, running };
+    } catch (error) {
+        console.error('Error getting Tor status:', error);
+        return { installed: false, running: false };
+    }
+});
 
 ipcMain.handle('auto-login', async (event, token) => {
     let browserWindow = new BrowserWindow({
