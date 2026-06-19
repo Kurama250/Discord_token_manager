@@ -25,7 +25,7 @@ See the [full license](https://creativecommons.org/licenses/by-nc-nd/4.0/deed.en
 
 <br/>
 
-> **Pre-built installer available in [Releases](https://github.com/Kurama250/Discord_token_manager/releases)** — no need to compile from source.
+> **Pre-built installer available in [Releases](https://github.com/Kurama250/Discord_token_manager/releases/tag/v1.4)** — no need to compile from source.
 
 </div>
 
