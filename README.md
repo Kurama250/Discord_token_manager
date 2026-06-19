@@ -7,7 +7,7 @@
 <br/><br/>
 
 [![Status](https://img.shields.io/badge/Status-Stable-brightgreen?style=for-the-badge)](.)
-[![Version](https://img.shields.io/badge/Version-3.4.0-blue?style=for-the-badge)](.)
+[![Version](https://img.shields.io/badge/Version-1.4.0-blue?style=for-the-badge)](.)
 [![Platform](https://img.shields.io/badge/Platform-Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white)](.)
 [![Electron](https://img.shields.io/badge/Electron-33-47848F?style=for-the-badge&logo=electron&logoColor=white)](https://www.electronjs.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-≥18-339933?style=for-the-badge&logo=node.js&logoColor=white)](.)
@@ -172,7 +172,7 @@ Output:
 
 | File | Path |
 |---|---|
-| Installer | `dist/Discord_token_manager Setup 3.4.0.exe` |
+| Installer | `dist/Discord_token_manager Setup 1.4.0.exe` |
 | Portable | `dist/win-unpacked/Discord_token_manager.exe` |
 
 ---
@@ -214,7 +214,7 @@ Discord_token_manager/
 
 ```
 ╔══════════════════════════════════════════════════════════╗
-║   💬  DISCORD TOKEN MANAGER  v3.4.0                     ║
+║   💬  DISCORD TOKEN MANAGER  v1.4.0                     ║
 ║   Multi-account · Tor proxy · Screen share              ║
 ╠══════════════════════════════════════════════════════════╣
 ║  ● TOR CHECK                                             ║
