@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog, desktopCapturer } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, desktopCapturer, nativeImage } = require('electron');
 const fs = require('fs-extra');
 const path = require('path');
 const net = require('net');
@@ -9,6 +9,18 @@ const { spawn, exec } = require('child_process');
 const ROOT_DIR = path.join(__dirname, '..');
 const VIEWS_DIR = path.join(ROOT_DIR, 'views');
 const PRELOAD_PATH = path.join(__dirname, 'preload', 'discord-preload.js');
+const APP_ICON_PATH = path.join(ROOT_DIR, 'assets', 'img', 'app-icon.ico');
+
+const getAppIcon = () => {
+    if (fs.existsSync(APP_ICON_PATH)) {
+        return nativeImage.createFromPath(APP_ICON_PATH);
+    }
+    return undefined;
+};
+
+if (process.platform === 'win32') {
+    app.setAppUserModelId('kurama.info.discord-token-manager');
+}
 
 const DISABLED_FEATURES = [
     'WebAuthentication',
@@ -124,6 +136,7 @@ const showScreenPicker = async (parentWindow) => {
             resizable: false,
             title: 'Partager l\'écran',
             autoHideMenuBar: true,
+            icon: getAppIcon(),
             webPreferences: {
                 nodeIntegration: true,
                 contextIsolation: false,
@@ -175,6 +188,7 @@ const createLoadingWindow = () => {
         transparent: true,
         resizable: false,
         alwaysOnTop: true,
+        icon: getAppIcon(),
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false,
@@ -359,6 +373,7 @@ app.on('ready', async () => {
         transparent: true,
         resizable: true,
         hasShadow: false,
+        icon: getAppIcon(),
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false,
@@ -603,6 +618,7 @@ const openDiscordWindow = async ({ token, index, torSession = null }) => {
         width: 1280,
         height: 720,
         show: true,
+        icon: getAppIcon(),
         webPreferences: {
             session,
             nodeIntegration: false,
