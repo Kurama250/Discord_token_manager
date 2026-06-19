@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Partager l'écran</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 16px;
+      font-family: 'Segoe UI', sans-serif;
+      background: #1e1f22;
+      color: #f2f3f5;
+    }
+    h2 { margin: 0 0 16px; font-size: 18px; font-weight: 600; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px;
+      max-height: 360px;
+      overflow-y: auto;
+    }
+    .item {
+      cursor: pointer;
+      border: 2px solid #3f4147;
+      border-radius: 8px;
+      padding: 8px;
+      background: #2b2d31;
+      transition: border-color 0.15s;
+    }
+    .item:hover { border-color: #5865f2; }
+    .item.selected { border-color: #5865f2; background: #35373c; }
+    .item img, .item .placeholder {
+      width: 100%;
+      height: 110px;
+      border-radius: 4px;
+      background: #111;
+    }
+    .item img { object-fit: cover; }
+    .item .placeholder {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      color: #5865f2;
+    }
+    .item p {
+      margin: 8px 0 0;
+      font-size: 13px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .badge {
+      display: inline-block;
+      background: #5865f2;
+      color: #fff;
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-right: 4px;
+    }
+    .actions {
+      margin-top: 16px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+    button {
+      border: none;
+      border-radius: 4px;
+      padding: 8px 16px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    #cancel { background: #4e5058; color: #fff; }
+    #cancel:hover { background: #6d6f78; }
+    #share {
+      background: #5865f2;
+      color: #fff;
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    #share.enabled { opacity: 1; cursor: pointer; }
+    #share.enabled:hover { background: #4752c4; }
+    .loading { color: #b5bac1; padding: 24px; text-align: center; }
+  </style>
+</head>
+<body>
+  <h2>Choisir ce qu'il faut partager</h2>
+  <div id="grid" class="grid"><div class="loading">Chargement...</div></div>
+  <div class="actions">
+    <button id="cancel">Annuler</button>
+    <button id="share" disabled>Partager</button>
+  </div>
+  <script>
+    const { ipcRenderer } = require('electron');
+
+    let selectedId = null;
+
+    const shareBtn = document.getElementById('share');
+    const cancelBtn = document.getElementById('cancel');
+
+    cancelBtn.addEventListener('click', () => {
+      ipcRenderer.send('screen-picker-cancel');
+    });
+
+    shareBtn.addEventListener('click', () => {
+      if (!selectedId) return;
+      ipcRenderer.send('screen-picker-select', selectedId);
+    });
+
+    ipcRenderer.invoke('screen-picker-sources').then((sources) => {
+      const grid = document.getElementById('grid');
+      grid.innerHTML = '';
+
+      if (!sources.length) {
+        grid.innerHTML = '<div class="loading">Aucune source trouvée</div>';
+        return;
+      }
+
+      sources.forEach((source) => {
+        const item = document.createElement('div');
+        item.className = 'item';
+        item.dataset.id = source.id;
+        const typeLabel = source.type === 'screen' ? 'Écran' : 'Fenêtre';
+        const thumb = source.thumbnailURL
+          ? `<img src="${source.thumbnailURL}" alt="">`
+          : `<div class="placeholder">${source.type === 'screen' ? '🖥️' : '🪟'}</div>`;
+        item.innerHTML = `${thumb}<p><span class="badge">${typeLabel}</span> ${source.name}</p>`;
+
+        item.addEventListener('click', () => {
+          document.querySelectorAll('.item.selected').forEach((el) => el.classList.remove('selected'));
+          item.classList.add('selected');
+          selectedId = source.id;
+          shareBtn.disabled = false;
+          shareBtn.classList.add('enabled');
+        });
+
+        item.addEventListener('dblclick', () => {
+          selectedId = source.id;
+          ipcRenderer.send('screen-picker-select', selectedId);
+        });
+
+        grid.appendChild(item);
+      });
+    });
+  </script>
+</body>
+</html>

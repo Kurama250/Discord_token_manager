@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tor Installation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: transparent;
+            color: #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        .loading-container {
+            background: #1e1e1e;
+            border-radius: 10px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+            border: 2px solid #333333;
+            min-width: 280px;
+            max-width: 320px;
+            position: relative;
+        }
+
+        .loading-container::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #7289da, #5a6fbf, #7289da);
+            border-radius: 12px;
+            z-index: -1;
+            animation: borderGlow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes borderGlow {
+            0% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .loading-icon {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #333333;
+            border-top: 3px solid #7289da;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+            box-shadow: 0 0 15px rgba(114, 137, 218, 0.3);
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #e0e0e0;
+            letter-spacing: 0.5px;
+        }
+
+        .message {
+            font-size: 13px;
+            color: #cccccc;
+            margin-bottom: 20px;
+            min-height: 18px;
+            font-weight: normal;
+        }
+
+        .progress-container {
+            width: 100%;
+            background: #333333;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 10px;
+            height: 8px;
+            border: 1px solid #444444;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #7289da, #5a6fbf, #7289da);
+            border-radius: 8px;
+            transition: width 0.4s ease;
+            width: 0%;
+            position: relative;
+        }
+
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .progress-text {
+            font-size: 13px;
+            color: #7289da;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .status {
+            font-size: 11px;
+            color: #999999;
+            margin-top: 8px;
+            font-weight: normal;
+        }
+
+        .success {
+            color: #4caf50;
+        }
+
+        .error {
+            color: #f44336;
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-container">
+        <div class="loading-icon" id="loadingIcon"></div>
+        <div class="title">Tor Installation</div>
+        <div class="message" id="message">Initializing...</div>
+        
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div class="progress-text" id="progressText">0%</div>
+        
+        <div class="status" id="status">Please wait...</div>
+    </div>
+
+    <script>
+        const { ipcRenderer } = require('electron');
+
+        const messageEl = document.getElementById('message');
+        const progressBarEl = document.getElementById('progressBar');
+        const progressTextEl = document.getElementById('progressText');
+        const statusEl = document.getElementById('status');
+        const loadingIconEl = document.getElementById('loadingIcon');
+
+        ipcRenderer.on('update-progress', (event, data) => {
+            if (data.message) {
+                let englishMessage = data.message;
+                
+                if (data.message.includes('Téléchargement de Tor')) {
+                    englishMessage = data.message.replace('Téléchargement de Tor...', 'Downloading Tor...');
+                } else if (data.message.includes('Extraction de Tor')) {
+                    englishMessage = data.message.replace('Extraction de Tor...', 'Extracting Tor...');
+                } else if (data.message.includes('Vérification')) {
+                    englishMessage = data.message.replace('Vérification de l\'installation de Tor...', 'Checking Tor installation...');
+                } else if (data.message.includes('Installation de Tor requise')) {
+                    englishMessage = data.message.replace('Installation de Tor requise...', 'Tor installation required...');
+                } else if (data.message.includes('Installation réussie')) {
+                    englishMessage = data.message.replace('Installation réussie !', 'Installation successful!');
+                } else if (data.message.includes('Erreur')) {
+                    englishMessage = data.message.replace('Erreur lors de l\'installation', 'Installation error');
+                }
+                
+                messageEl.textContent = englishMessage;
+            }
+            
+            if (data.progress !== null && data.progress !== undefined) {
+                progressBarEl.style.width = `${data.progress}%`;
+                progressTextEl.textContent = `${data.progress}%`;
+                
+                if (data.progress === 100) {
+                    statusEl.textContent = 'Installation completed!';
+                    statusEl.className = 'status success';
+                    loadingIconEl.style.animation = 'none';
+                    loadingIconEl.style.borderTop = '3px solid #28a745';
+                } else if (data.progress === 0 && data.message && data.message.includes('Erreur')) {
+                    statusEl.textContent = 'Error detected';
+                    statusEl.className = 'status error';
+                    loadingIconEl.style.borderTop = '3px solid #dc3545';
+                }
+            }
+        });
+
+        document.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+        });
+    </script>
+</body>
+</html> 
