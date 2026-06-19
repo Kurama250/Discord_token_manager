@@ -9,7 +9,7 @@ if %errorlevel% neq 0 (
 npm list fs-extra net user-agents electron electron-builder >nul 2>&1
 if %errorlevel% neq 0 (
     echo fs-extra net user-agents electron electron-builder module is not installed. Installing them...
-    npm install fs-extra@11.2.0 net@1.0.2 electron@33.2.1 electron-builder@25.1.8
+    npm install
     if %errorlevel% equ 0 (
         echo Installation of fs-extra net user-agents electron electron-builder completed successfully !
     ) else (
